@@ -2,7 +2,7 @@
 
 Backend service implementing the LootFi MVP: Steam-based collateral loans against CS2 skins with instant crypto disbursal and automated liquidation.
 
-## LootFi Backend Spec (Digest Version)
+## LootFi Backend Spec
 
 ### Core Features
 - Steam OAuth login and inventory sync (CS2 only in MVP).
@@ -162,10 +162,6 @@ lootfi-backend/
 │   └── routes/
 └── index.ts
 ```
-
-## Success Criteria
-- End-to-end flow: login → deposit → loan → repay → reclaim.
-- Automatic liquidation tested and working (triggered on due or LTV breach).
 
 ## Notes
 - Swagger UI available at `/documentation` in development.
