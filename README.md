@@ -1,12 +1,8 @@
-<img width="100" height="100" alt="lootfi" src="https://github.com/user-attachments/assets/bcc5967e-5057-42af-9144-9987b65dd8e6" />
-
 # LootFi
 
-<<<<<<< HEAD
 ## Overview
 =======
 ## LootFi Backend Spec
->>>>>>> d82e202eb06727bf1bfad9c0368bc9cd93c06502
 
 LootFi is a gaming-finance backend that lets players borrow crypto against their Steam CS2 skins. Users log in with Steam, deposit selected items to escrow, receive an instant crypto loan, and reclaim their skins upon repayment. Automatic liquidation protects the treasury if a borrower misses payments or collateral LTV breaches.
 
