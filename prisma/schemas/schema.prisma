@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  description String
+  budget      Float
+  startDate   DateTime
+  endDate     DateTime
+  platform    SocialPlatform
+  hashtag     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+enum SocialPlatform {
+  TIKTOK
+  X
+  YOUTUBE
+  INSTAGRAM
+}

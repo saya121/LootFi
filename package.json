@@ -1,0 +1,49 @@
+{
+  "name": "lootfi-backend",
+  "version": "0.1.0",
+  "description": "LootFi backend MVP: CS2 collateralized loans",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "prestart": "prisma generate",
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts",
+    "lint": "eslint .",
+    "format": "eslint . --fix",
+    "db:push": "prisma db push",
+    "db:fresh": "prisma db push --force-reset",
+    "db:reset": "prisma db push --force-reset && tsx ./prisma/seeders/index.ts"
+  },
+  "author": "LootFi",
+  "license": "MIT",
+  "imports": {
+    "#app/*": "./app/*.js",
+    "#prisma/*": "./prisma/*.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.4.1",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.4",
+    "axios": "^1.11.0",
+    "cryptr": "^6.3.0",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "google-auth-library": "^10.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "jwk-to-pem": "^2.0.7",
+    "tsx": "^4.19.3",
+    "zod": "^4.0.15"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "prisma": "^6.5.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
+  }
+}

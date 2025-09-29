@@ -1,0 +1,7 @@
+enum ErrorCodes {
+  SYSTEM_ERROR = 'SYSTEM_ERROR',
+  PARSING_ERROR = 'PARSING_ERROR',
+  INVALID_ACCESS_TOKEN = 'INVALID_ACCESS_TOKEN',
+}
+
+export default ErrorCodes

@@ -1,0 +1,19 @@
+{
+  "include": [
+    "./app/**/*",
+    "./prisma/**/*",
+  ],
+  "exclude": [],
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "module": "NodeNext",
+    "baseUrl": "./",
+    "rootDir": "./",
+    "outDir": "./build",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "types": [
+      "./types/fastify.d.ts"
+    ]
+  },
+}

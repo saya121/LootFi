@@ -1,0 +1,33 @@
+model User {
+    id        String   @id @default(uuid())
+
+    username     String?   @unique
+    password  String?
+
+    wallet Wallet?
+
+    authMethod AuthMethod @default(WALLET)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Wallet {
+    id        String   @id @default(uuid())
+
+    address String @unique
+    encryptedPrivateKey String?
+
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+enum AuthMethod {
+    APPLE
+    GOOGLE
+    USERNAME_PASSWORD
+    WALLET
+}
