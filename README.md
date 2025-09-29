@@ -1,151 +1,122 @@
-# LootFi Backend
+<img width="100" height="100" alt="lootfi" src="https://github.com/user-attachments/assets/bcc5967e-5057-42af-9144-9987b65dd8e6" />
 
-Backend service implementing the LootFi MVP: Steam-based collateral loans against CS2 skins with instant crypto disbursal and automated liquidation.
+# LootFi
 
-## LootFi Backend Spec (Digest Version)
+## Overview
 
-### Core Features
-- Steam OAuth login and inventory sync (CS2 only in MVP).
-- Real-time skin valuation and LTV calculation.
-- Deposit items to escrow via trade bot intent.
-- Instant crypto loan disbursal (mock treasury for MVP).
-- Loan repayment and skin reclaim.
-- Automatic liquidation on missed payments or LTV breach.
-- Loan dashboard endpoints for status and repayment tracking.
+LootFi is a gaming-finance backend that lets players borrow crypto against their Steam CS2 skins. Users log in with Steam, deposit selected items to escrow, receive an instant crypto loan, and reclaim their skins upon repayment. Automatic liquidation protects the treasury if a borrower misses payments or collateral LTV breaches.
 
-### Services
-- Auth: Steam login, JWT issuance.
-- Inventory: Fetch & normalize user skins.
-- Pricing: Real-time item pricing from marketplaces (mocked in MVP).
-- Escrow: Trade bot intent to receive/return items.
-- Credit Engine: LTV calculation, loan quote generation.
-- Loan: Issue, track, repay loans.
-- Treasury: Handle crypto disbursal & repayment (mock chain).
-- Liquidation: Sell collateral if default.
-- Notifications: Alerts for due dates, liquidation (stub in MVP).
-- Admin: Risk settings, overrides (out of scope for MVP).
+## Features
 
-### Data Model (Essentials)
-- `User`: steam_id, wallet, KYC status.
-- `ItemInstance`: game, name, value, escrow state.
-- `Loan`: principal, APR, due date, status.
-- `Quote`: valuation, LTV, fees, expiry.
-- `Ledger`: disbursal, repayment, liquidation events.
+- **Steam Login + Inventory**: OAuth-like Steam login and CS2 inventory sync
+- **Real-Time Valuation**: Price items and compute LTV in real time
+- **Escrow via Trade Bot**: Create trade intents and lock items as collateral
+- **Instant Loan Disbursal**: Send crypto to borrower wallet (mock treasury in MVP)
+- **Repayment + Reclaim**: Repay anytime and receive items back
+- **Automatic Liquidation**: Sell collateral after grace period or LTV breach
+- **Loan Dashboard**: Track loan status, outstanding, collateral value, and LTV
 
-### Core Flows
-1. Login & Sync: Steam login → fetch inventory.
-2. Quote & Deposit: Items valued → loan quote → trade bot receives escrow (intent → accept).
-3. Loan Disbursal: Crypto sent to wallet (mock), items locked.
-4. Repayment: User pays → skins returned.
-5. Liquidation: Auto-sale if missed payment → proceeds repay loan.
+## How It Works
 
-### Risk & LTV
-- Base LTV: 30–50% (configurable, default 40%).
-- Haircut on low-confidence pricing.
-- Grace period before liquidation (config; simplified in MVP).
-- Auto top-up option (todo).
-
-### APIs (Key Endpoints)
-All routes are under `/v1`.
-- `POST /auth/steam` – Steam login → JWT.
-- `POST /inventory/sync` – Fetch inventory (CS2 mock data on first sync).
-- `POST /quotes` – Get loan quote for selected item IDs.
-- `POST /escrow/intents` – Create trade offer intent for selected item IDs.
-- `POST /loans` – Issue loan from approved quote.
-- `POST /loans/:id/repay` – Repay loan amount.
-- `GET /loans/:id` – Loan status, collateral value, outstanding, LTV.
-
-### MVP Scope
-- CS2 support only.
-- Single blockchain (mock chain; set with `BASE_CHAIN`).
-- One liquidation marketplace (simulated sale at 90% of price).
-- Email notifications not implemented; stub only.
-- Basic admin settings via env only.
-
-### Security & Compliance
-- JWT auth on protected endpoints.
-- Webhook signatures not required in MVP.
-- Secrets via environment variables.
-- Fraud checks and item blacklists: todo.
-- Minimal KYC at launch.
+1. **Login & Sync**: Steam login → fetch CS2 inventory
+2. **Quote & Deposit**: Price items → generate loan quote → trade intent for escrow
+3. **Loan Disbursal**: Crypto sent to wallet, items locked in escrow
+4. **Repayment**: Borrower repays → skins returned to the user
+5. **Liquidation**: Missed payment or LTV breach → sell items → repay loan
 
 ## Tech Stack
-- Node.js + Fastify (TypeScript)
-- Swagger UI at `/documentation` in non-production
-- Prisma present but not required for MVP; In-memory store used
+
+- **Backend**: Node.js with Fastify (TypeScript)
+- **Data**: In-memory store (MVP) with Prisma skeleton for future Postgres
+- **Auth**: JWT
+- **API Documentation**: Swagger/OpenAPI (`/documentation` in dev)
+- **Games**: Counter‑Strike 2 (MVP)
+- **Chain**: Mock chain for treasury (Base/Polygon planned)
 
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 
-### Setup
+### Installation
+
 ```bash
-cp .env.example .env
+# Clone the repository
+git clone git@github.com:saya121/LootFi.git
+
+# Navigate to project directory
+cd LootFi
+
+# Install dependencies
 npm install
+
+# Set up environment variables
+cp .env.example .env
+
+# Optional: Prisma skeleton (not required for MVP runtime)
+npx prisma generate
+# npx prisma db push
+# npx prisma db seed
+
+# Start development server
 npm run dev
 ```
 
-### Example Flow (cURL)
-```bash
-# 1) Steam login (mock)
-TOKEN=$(curl -s -X POST localhost:3000/v1/auth/steam -H 'content-type: application/json' \
-  -d '{"steamId":"76561198000000000"}' | jq -r .data.token)
+### Environment Variables
 
-# 2) Sync inventory
-curl -s -X POST localhost:3000/v1/inventory/sync -H "authorization: Bearer $TOKEN"
-
-# 3) Create quote (use itemIds from sync response)
-curl -s -X POST localhost:3000/v1/quotes -H 'content-type: application/json' -H "authorization: Bearer $TOKEN" \
-  -d '{"itemIds":["itm_xxx","itm_yyy"]}'
-
-# 4) Create escrow intent
-curl -s -X POST localhost:3000/v1/escrow/intents -H 'content-type: application/json' -H "authorization: Bearer $TOKEN" \
-  -d '{"itemIds":["itm_xxx","itm_yyy"]}'
-
-# 5) Issue loan (use quoteId)
-curl -s -X POST localhost:3000/v1/loans -H 'content-type: application/json' -H "authorization: Bearer $TOKEN" \
-  -d '{"quoteId":"qte_xxx","wallet":"0xYourWallet"}'
-
-# 6) Get status
-curl -s localhost:3000/v1/loans/loan_xxx -H "authorization: Bearer $TOKEN"
-
-# 7) Repay
-curl -s -X POST localhost:3000/v1/loans/loan_xxx/repay -H 'content-type: application/json' -H "authorization: Bearer $TOKEN" \
-  -d '{"amount": 10}'
-```
-
-## Environment Variables
 ```env
+# App
 APP_PORT=3000
+NODE_ENV=development
 LOGGER=true
 
 # JWT
-JWT_SECRET=change_me_min_10_chars
+JWT_SECRET=your_jwt_secret
 
-# Optional: Pricing/Treasury config
+# Pricing & Treasury (MVP uses mocks)
 PRICING_PROVIDER=mock
-BASE_CHAIN=mock # base | polygon | mock
+BASE_CHAIN=mock    # base | polygon | mock
 TREASURY_WALLET=
 
-# Optional: Steam
+# Steam (optional for real integration)
 STEAM_API_KEY=
 
-# Database (unused in MVP; kept for future Prisma usage)
+# Legacy/Optional
+ENCRYPTION_KEY_1=
+ENCRYPTION_KEY_2=
+
+# Database (unused in MVP; kept for Prisma migration)
 DATABASE_URL=
 ```
 
+## Usage
+
+### For Borrowers
+
+1. Authenticate with Steam
+2. Sync CS2 inventory
+3. Select items and request a quote
+4. Create escrow trade intent and deposit items
+5. Receive instant loan; repay to reclaim items
+
+### For Admins (MVP)
+
+1. Configure LTV and risk bounds via env
+2. Monitor loans; liquidation triggers automatically
+
 ## Project Structure
+
 ```
-lootfi-backend/
+lootfi/
 ├── app/
-│   ├── configs/
-│   ├── exceptions/
+│   ├── configs/           # App + Swagger configuration
+│   ├── exceptions/        # Exceptions and error codes
 │   ├── libs/
-│   │   ├── db/                  # In-memory store (MVP)
-│   │   └── utils/               # jwt, auth middleware, encryption
+│   │   ├── db/            # In-memory data store
+│   │   └── utils/         # jwt, auth middleware, encryption
 │   ├── modules/
-│   │   └── lootfi/
+│   │   └── lootfi/        # Core LootFi routes & services
 │   │       ├── auth_steam_route.ts
 │   │       ├── inventory_route.ts
 │   │       ├── quotes_route.ts
@@ -159,14 +130,110 @@ lootfi-backend/
 │   │           ├── loan_service.ts
 │   │           ├── treasury_service.ts
 │   │           └── liquidation_service.ts
-│   └── routes/
-└── index.ts
+│   └── routes/            # API version mounting
+│       ├── index.ts
+│       └── v1.ts
+├── prisma/
+│   ├── schemas/
+│   │   ├── schema.prisma
+│   │   └── user.prisma
+│   └── seeders/
+│       └── index.ts
+├── types/
+│   └── fastify.d.ts
+└── index.ts               # Application entry point
 ```
 
-## Success Criteria
-- End-to-end flow: login → deposit → loan → repay → reclaim.
-- Automatic liquidation tested and working (triggered on due or LTV breach).
+## Contributing
 
-## Notes
-- Swagger UI available at `/documentation` in development.
-- Pricing and treasury are mocked; swap implementations later without changing routes.
+We welcome contributions from the community! Please read our Contributing Guidelines before submitting pull requests.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and commit: `git commit -m 'Add amazing feature'`
+4. Push to your branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## API Documentation
+
+### Authentication
+
+```http
+POST /v1/auth/steam
+```
+
+### Inventory
+
+```http
+POST /v1/inventory/sync
+```
+
+### Pricing & Quotes
+
+```http
+POST /v1/quotes
+```
+
+### Escrow
+
+```http
+POST /v1/escrow/intents
+```
+
+### Loans
+
+```http
+POST /v1/loans
+POST /v1/loans/:id/repay
+GET  /v1/loans/:id
+```
+
+## Database Schema
+
+MVP uses an in-memory store. Prisma models are scaffolded for future migrations. Essential entities:
+
+- **User**: steam_id, wallet, KYC status
+- **ItemInstance**: game, name, value, escrow state
+- **Loan**: principal, APR, due date, status
+- **Quote**: valuation, LTV, fees, expiry
+- **Ledger**: disbursal, repayment, liquidation events
+
+Run `npx prisma studio` after configuring a database if you want to preview models.
+
+## Security
+
+- JWT auth for protected endpoints
+- Secrets via environment variables
+- Webhook signatures, fraud checks, and blacklists: planned
+- Minimal KYC at launch
+
+## Supported Platforms
+
+- **Game**: Counter‑Strike 2 (MVP)
+- **Blockchain**: Mock chain (Base/Polygon planned)
+
+## Roadmap
+
+- [ ] Real Steam OAuth + inventory API
+- [ ] Marketplace pricing integrations with confidence scoring
+- [ ] Dota 2 support
+- [ ] Treasury on Base or Polygon
+- [ ] Email notifications
+- [ ] Admin dashboard & risk overrides
+
+## Tokenomics
+
+Not applicable. LootFi issues loans; no platform reward token in MVP.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Steam and CS2 communities
+- Open source maintainers of Fastify, Prisma, Zod, and friends
+- Early testers and contributors
+
